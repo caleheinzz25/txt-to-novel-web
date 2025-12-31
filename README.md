@@ -1,36 +1,129 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NovelReader - TXT to Novel Web Application
+
+A full-stack web application built with Next.js 14+ that allows users to upload TXT novel files, automatically split them into chapters (8000 words per chapter), and read them in a beautiful, distraction-free reader interface.
+
+## Features
+
+- 📤 **Drag & Drop Upload**: Upload TXT files with drag-and-drop support
+- ✂️ **Smart Chapter Splitting**: Automatically splits novels into ~8000 word chapters with sentence boundary detection
+- 📚 **Novel Library**: View all uploaded novels in a beautiful card grid
+- 🔍 **Search & Filter**: Search novels by title and sort by date, chapters, or words
+- 📖 **Clean Reader Interface**: Distraction-free reading experience
+- 🌙 **Dark/Light Mode**: Toggle between themes, persisted in localStorage
+- 🔤 **Font Size Control**: Adjust reading font size
+- 📱 **Responsive Design**: Works on desktop and mobile devices
+- ⏩ **Chapter Navigation**: Easy prev/next navigation with chapter list sidebar
+
+## Tech Stack
+
+- **Frontend**: Next.js 16 (App Router), React 19, TypeScript
+- **Styling**: CSS Custom Properties with dark/light theme support
+- **Database**: MongoDB
+- **File Upload**: react-dropzone
+- **Icons**: lucide-react
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+ or Bun
+- MongoDB database (local or MongoDB Atlas)
+
+### Installation
+
+1. Clone the repository:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd txt-to-novel-web
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+bun install
+# or
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Set up environment variables:
 
-## Learn More
+```bash
+cp .env.example .env.local
+```
 
-To learn more about Next.js, take a look at the following resources:
+4. Edit `.env.local` with your MongoDB connection string:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```env
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/noveldb?retryWrites=true&w=majority
+MAX_FILE_SIZE=10485760
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+5. Run the development server:
 
-## Deploy on Vercel
+```bash
+bun dev
+# or
+npm run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+6. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## API Endpoints
+
+| Method | Endpoint                     | Description                                                       |
+| ------ | ---------------------------- | ----------------------------------------------------------------- |
+| POST   | `/api/upload`                | Upload and process a TXT novel file                               |
+| GET    | `/api/novels`                | List all novels (supports `search`, `sortBy`, `sortOrder` params) |
+| GET    | `/api/novels/[id]`           | Get novel details with chapter list                               |
+| DELETE | `/api/novels/[id]`           | Delete a novel and all its chapters                               |
+| GET    | `/api/chapters?novelId=[id]` | List chapters for a novel                                         |
+| GET    | `/api/chapters/[id]`         | Get chapter content with navigation                               |
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── api/
+│   │   ├── upload/route.ts
+│   │   ├── novels/route.ts
+│   │   ├── novels/[id]/route.ts
+│   │   ├── chapters/route.ts
+│   │   └── chapters/[id]/route.ts
+│   ├── novel/
+│   │   └── [id]/
+│   │       ├── page.tsx
+│   │       └── chapter/[chapterId]/page.tsx
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/
+│   ├── ChapterList.tsx
+│   ├── FileUpload.tsx
+│   ├── NovelCard.tsx
+│   ├── ReaderControls.tsx
+│   ├── SearchBar.tsx
+│   └── ThemeProvider.tsx
+└── lib/
+    ├── models/
+    │   ├── chapters.ts
+    │   └── novels.ts
+    ├── mongodb.ts
+    └── textProcessor.ts
+```
+
+## Usage
+
+1. **Upload a Novel**: Drag and drop a TXT file onto the upload area, or click to select a file
+2. **Browse Library**: View your uploaded novels in the grid, use search to find specific titles
+3. **Read**: Click on a novel card to view its chapters, then click "Start Reading" or select a chapter
+4. **Customize Reading**: Toggle dark/light mode, adjust font size, and navigate between chapters
+
+## Testing
+
+For testing, you can use public domain novels from [Project Gutenberg](https://www.gutenberg.org/) in TXT format.
+
+## License
+
+MIT
