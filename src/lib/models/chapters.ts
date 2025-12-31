@@ -1,0 +1,114 @@
+import { ObjectId, Collection } from "mongodb";
+import { getDatabase } from "../mongodb";
+
+export interface Chapter {
+  _id?: ObjectId;
+  novelId: ObjectId;
+  name: string;
+  chap: number;
+  content: string;
+  wordCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ChapterWithId extends Chapter {
+  _id: ObjectId;
+}
+
+async function getCollection(): Promise<Collection<Chapter>> {
+  const db = await getDatabase();
+  return db.collection<Chapter>("chapters");
+}
+
+export async function createChapter(
+  chapter: Omit<Chapter, "_id" | "createdAt" | "updatedAt">
+): Promise<ChapterWithId> {
+  const collection = await getCollection();
+  const now = new Date();
+  const newChapter: Chapter = {
+    ...chapter,
+    createdAt: now,
+    updatedAt: now,
+  };
+  const result = await collection.insertOne(newChapter);
+  return { ...newChapter, _id: result.insertedId };
+}
+
+export async function createManyChapters(
+  chapters: Omit<Chapter, "_id" | "createdAt" | "updatedAt">[]
+): Promise<ObjectId[]> {
+  const collection = await getCollection();
+  const now = new Date();
+  const chaptersWithDates = chapters.map((chapter) => ({
+    ...chapter,
+    createdAt: now,
+    updatedAt: now,
+  }));
+  const result = await collection.insertMany(chaptersWithDates);
+  return Object.values(result.insertedIds);
+}
+
+export async function getChaptersByNovelId(
+  novelId: string
+): Promise<ChapterWithId[]> {
+  const collection = await getCollection();
+  return collection
+    .find({ novelId: new ObjectId(novelId) })
+    .sort({ chap: 1 })
+    .toArray() as Promise<ChapterWithId[]>;
+}
+
+export async function getChapterById(
+  id: string
+): Promise<ChapterWithId | null> {
+  const collection = await getCollection();
+  return collection.findOne({
+    _id: new ObjectId(id),
+  }) as Promise<ChapterWithId | null>;
+}
+
+export async function getChapterByNovelAndNumber(
+  novelId: string,
+  chapterNumber: number
+): Promise<ChapterWithId | null> {
+  const collection = await getCollection();
+  return collection.findOne({
+    novelId: new ObjectId(novelId),
+    chap: chapterNumber,
+  }) as Promise<ChapterWithId | null>;
+}
+
+export async function deleteChaptersByNovelId(
+  novelId: string
+): Promise<number> {
+  const collection = await getCollection();
+  const result = await collection.deleteMany({
+    novelId: new ObjectId(novelId),
+  });
+  return result.deletedCount;
+}
+
+export async function getAdjacentChapters(
+  novelId: string,
+  currentChapter: number
+): Promise<{
+  prev: ChapterWithId | null;
+  next: ChapterWithId | null;
+}> {
+  const collection = await getCollection();
+  const novelObjId = new ObjectId(novelId);
+
+  const [prev, next] = await Promise.all([
+    collection.findOne({
+      novelId: novelObjId,
+      chap: currentChapter - 1,
+    }) as Promise<ChapterWithId | null>,
+    collection.findOne({
+      novelId: novelObjId,
+      chap: currentChapter + 1,
+    }) as Promise<ChapterWithId | null>,
+  ]);
+
+  return { prev, next };
+}
