@@ -210,11 +210,12 @@ export default function FileUpload({
                 gap: "0.75rem",
                 marginBottom: "0.75rem",
                 width: "100%",
-                maxWidth: "380px",
-                padding: "0.85rem",
+                maxWidth: "460px",
+                padding: "1rem",
                 background: "var(--bg-primary)",
-                borderRadius: "12px",
+                borderRadius: "14px",
                 border: "1px solid var(--border-color)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
               }}
             >
               {/* Selector 2 Opsi */}
@@ -224,8 +225,8 @@ export default function FileUpload({
                   width: "100%",
                   gap: "0.35rem",
                   background: "var(--bg-secondary)",
-                  padding: "0.25rem",
-                  borderRadius: "8px",
+                  padding: "0.3rem",
+                  borderRadius: "10px",
                 }}
               >
                 <button
@@ -233,8 +234,8 @@ export default function FileUpload({
                   onClick={() => setSplitMode("fixed_words")}
                   style={{
                     flex: 1,
-                    padding: "0.4rem 0.5rem",
-                    borderRadius: "6px",
+                    padding: "0.5rem 0.5rem",
+                    borderRadius: "8px",
                     border: "none",
                     background:
                       splitMode === "fixed_words"
@@ -245,7 +246,7 @@ export default function FileUpload({
                         ? "white"
                         : "var(--text-secondary)",
                     fontWeight: 600,
-                    fontSize: "0.8rem",
+                    fontSize: "0.85rem",
                     cursor: "pointer",
                     transition: "all 0.2s ease",
                   }}
@@ -257,8 +258,8 @@ export default function FileUpload({
                   onClick={() => setSplitMode("auto_heading")}
                   style={{
                     flex: 1,
-                    padding: "0.4rem 0.5rem",
-                    borderRadius: "6px",
+                    padding: "0.5rem 0.5rem",
+                    borderRadius: "8px",
                     border: "none",
                     background:
                       splitMode === "auto_heading"
@@ -269,7 +270,7 @@ export default function FileUpload({
                         ? "white"
                         : "var(--text-secondary)",
                     fontWeight: 600,
-                    fontSize: "0.8rem",
+                    fontSize: "0.85rem",
                     cursor: "pointer",
                     transition: "all 0.2s ease",
                   }}
@@ -279,39 +280,67 @@ export default function FileUpload({
               </div>
 
               {splitMode === "fixed_words" ? (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    width: "100%",
-                    fontSize: "0.85rem",
-                    color: "var(--text-secondary)",
-                  }}
-                >
-                  <span>Target Kata / Bab:</span>
-                  <input
-                    type="number"
-                    min={200}
-                    max={50000}
-                    step={500}
-                    value={wordsPerChapter}
-                    onChange={(e) =>
-                      setWordsPerChapter(
-                        Math.max(100, parseInt(e.target.value, 10) || 100)
-                      )
-                    }
+                <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <div
                     style={{
-                      width: "85px",
-                      padding: "0.3rem 0.5rem",
-                      borderRadius: "6px",
-                      border: "1px solid var(--border-color)",
-                      background: "var(--bg-secondary)",
-                      color: "var(--text-primary)",
-                      fontWeight: 600,
-                      textAlign: "center",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      width: "100%",
+                      fontSize: "0.85rem",
+                      color: "var(--text-secondary)",
                     }}
-                  />
+                  >
+                    <span>Target Kata / Bab:</span>
+                    <input
+                      type="number"
+                      min={200}
+                      max={50000}
+                      step={500}
+                      value={wordsPerChapter}
+                      onChange={(e) =>
+                        setWordsPerChapter(
+                          Math.max(100, parseInt(e.target.value, 10) || 100)
+                        )
+                      }
+                      style={{
+                        width: "90px",
+                        padding: "0.35rem 0.5rem",
+                        borderRadius: "8px",
+                        border: "1px solid var(--border-color)",
+                        background: "var(--bg-secondary)",
+                        color: "var(--text-primary)",
+                        fontWeight: 600,
+                        textAlign: "center",
+                        fontSize: "0.9rem",
+                      }}
+                    />
+                  </div>
+
+                  {/* Preset chips for fast tap */}
+                  <div style={{ display: "flex", gap: "0.35rem", width: "100%" }}>
+                    {[1000, 2000, 3000, 5000].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setWordsPerChapter(preset)}
+                        style={{
+                          flex: 1,
+                          padding: "0.35rem 0.25rem",
+                          borderRadius: "6px",
+                          border: "1px solid var(--border-color)",
+                          background: wordsPerChapter === preset ? "var(--accent-primary)" : "var(--bg-secondary)",
+                          color: wordsPerChapter === preset ? "white" : "var(--text-secondary)",
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        {preset}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 <div style={{ width: "100%" }}>

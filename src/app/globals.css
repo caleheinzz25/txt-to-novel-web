@@ -37,6 +37,24 @@
   --overlay-bg: rgba(0, 0, 0, 0.7);
 }
 
+/* Sepia Theme for comfortable eye reading */
+[data-theme="sepia"] {
+  --bg-primary: #fbf0d9;
+  --bg-secondary: #f4e4c1;
+  --bg-tertiary: #ecd7a9;
+  --text-primary: #433422;
+  --text-secondary: #6e583b;
+  --text-muted: #968165;
+  --border-color: #e2cca4;
+  --accent-primary: #b45309;
+  --accent-secondary: #d97706;
+  --accent-gradient: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+  --card-bg: #f5e6c8;
+  --card-shadow: 0 4px 20px rgba(95, 75, 50, 0.08);
+  --card-hover-shadow: 0 8px 30px rgba(180, 83, 9, 0.15);
+  --overlay-bg: rgba(67, 52, 34, 0.6);
+}
+
 /* ===== Base Styles ===== */
 * {
   box-sizing: border-box;
@@ -468,6 +486,12 @@ button {
 
 .novel-card:hover .novel-card-delete {
   opacity: 1;
+}
+
+@media (hover: none) {
+  .novel-card-delete {
+    opacity: 0.8;
+  }
 }
 
 .novel-card-delete:hover {
@@ -1140,43 +1164,400 @@ button {
   animation: spin 1s linear infinite;
 }
 
-/* ===== Responsive ===== */
+/* ===== Reading Progress Bar ===== */
+.reader-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--accent-gradient);
+  z-index: 150;
+  transition: width 0.1s ease-out;
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.4);
+}
+
+/* ===== App Navbar ===== */
+.app-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+}
+
+.app-navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--text-primary);
+}
+
+.app-navbar-brand .brand-icon {
+  color: var(--accent-primary);
+}
+
+.app-navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Theme Selector Pill */
+.theme-pill-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--bg-tertiary);
+  padding: 0.25rem;
+  border-radius: 9999px;
+  border: 1px solid var(--border-color);
+}
+
+.theme-pill-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  font-size: 0.8rem;
+}
+
+.theme-pill-btn:hover {
+  color: var(--text-primary);
+}
+
+.theme-pill-btn.active {
+  background: var(--accent-primary);
+  color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== Chapter List Toolbar on Novel Detail ===== */
+.chapters-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.chapter-search-box {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.chapter-search-box input {
+  width: 100%;
+  padding: 0.6rem 2.2rem 0.6rem 2.2rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.chapter-search-box input:focus {
+  border-color: var(--accent-primary);
+}
+
+.chapter-search-box .search-icon {
+  position: absolute;
+  left: 0.75rem;
+  color: var(--text-muted);
+}
+
+.chapter-search-box .clear-icon {
+  position: absolute;
+  right: 0.75rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.chapter-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chapter-sort-btn:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+/* ===== Reader Bottom Navigation ===== */
+.reader-bottom-nav {
+  max-width: 750px;
+  margin: 2rem auto 4rem;
+  padding: 1.5rem 1rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.reader-bottom-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.reader-bottom-actions {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.bottom-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.25rem;
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  min-height: 48px;
+}
+
+.bottom-nav-btn:hover:not(.disabled) {
+  background: var(--bg-tertiary);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  transform: translateY(-1px);
+}
+
+.bottom-nav-btn.primary {
+  background: var(--accent-gradient);
+  color: white;
+  border: none;
+}
+
+.bottom-nav-btn.primary:hover:not(.disabled) {
+  opacity: 0.95;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.bottom-nav-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.back-to-top-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  border-radius: 9999px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.back-to-top-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+
+/* ===== Drawer Search ===== */
+.drawer-search-wrapper {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  display: flex;
+  gap: 0.5rem;
+}
+
+.drawer-search-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.drawer-search-input:focus {
+  border-color: var(--accent-primary);
+}
+
+.drawer-sort-btn {
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Touch targets and Mobile enhancements */
 @media (max-width: 768px) {
   .main-container {
-    padding: 1rem;
+    padding: 1rem 0.75rem;
+  }
+
+  .header {
+    margin-bottom: 2rem;
   }
 
   .header h1 {
-    font-size: 2rem;
+    font-size: 2.25rem;
   }
 
   .dropzone {
     padding: 2rem 1rem;
+    border-radius: 12px;
   }
 
   .novel-header {
     flex-direction: column;
     align-items: center;
     text-align: center;
+    gap: 1.5rem;
+  }
+
+  .novel-cover {
+    width: 160px;
+    height: 220px;
+  }
+
+  .novel-info h1 {
+    font-size: 1.6rem;
   }
 
   .novel-meta {
     justify-content: center;
+    gap: 1rem;
+  }
+
+  .words-control-box {
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .words-control-inputs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .words-input-wrapper {
+    justify-content: space-between;
+  }
+
+  .preset-btn-group {
+    justify-content: space-between;
+  }
+
+  .preset-chip {
+    flex: 1;
+    text-align: center;
+    padding: 0.5rem 0.25rem;
+  }
+
+  .resplit-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.75rem;
+  }
+
+  /* Reader mobile */
+  .reader-header {
+    padding: 0.6rem 0.75rem;
+  }
+
+  .reader-title {
+    padding: 0 0.5rem;
   }
 
   .reader-title h2 {
-    font-size: 0.875rem;
+    font-size: 0.85rem;
   }
 
   .reader-content {
-    padding: 1.5rem 1rem 3rem;
+    padding: 1.25rem 1rem 2.5rem;
+    line-height: 1.85;
   }
 
-  .nav-btn span {
-    display: none;
+  .reader-content p {
+    margin-bottom: 1.25em;
+    text-align: left;
   }
 
+  .reader-bottom-actions {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  .bottom-nav-btn {
+    width: 100%;
+    padding: 0.75rem 1rem;
+  }
+
+  .action-btn,
+  .back-btn,
   .nav-btn {
-    padding: 0.5rem;
+    min-width: 40px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .chapter-list-panel {
+    max-width: 85%;
+  }
+}
+
+@media (max-width: 480px) {
+  .header h1 {
+    font-size: 1.85rem;
+  }
+
+  .chapter-list-panel {
+    max-width: 100%;
+  }
+
+  .novels-grid {
+    grid-template-columns: 1fr;
   }
 }

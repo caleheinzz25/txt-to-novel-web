@@ -8,12 +8,13 @@ import {
   ReactNode,
 } from "react";
 
-type Theme = "light" | "dark";
+export type Theme = "light" | "dark" | "sepia";
 
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
   setTheme: (theme: Theme) => void;
+  cycleTheme: () => void;
   mounted: boolean;
 }
 
@@ -21,6 +22,7 @@ const ThemeContext = createContext<ThemeContextType>({
   theme: "dark",
   toggleTheme: () => {},
   setTheme: () => {},
+  cycleTheme: () => {},
   mounted: false,
 });
 
@@ -39,7 +41,7 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
   useEffect(() => {
     setMounted(true);
     const savedTheme = localStorage.getItem("theme") as Theme | null;
-    if (savedTheme) {
+    if (savedTheme && (savedTheme === "light" || savedTheme === "dark" || savedTheme === "sepia")) {
       setThemeState(savedTheme);
     } else if (window.matchMedia("(prefers-color-scheme: light)").matches) {
       setThemeState("light");
@@ -53,8 +55,16 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
     }
   }, [theme, mounted]);
 
+  const cycleTheme = () => {
+    setThemeState((prev) => {
+      if (prev === "dark") return "light";
+      if (prev === "light") return "sepia";
+      return "dark";
+    });
+  };
+
   const toggleTheme = () => {
-    setThemeState((prev) => (prev === "dark" ? "light" : "dark"));
+    cycleTheme();
   };
 
   const setTheme = (newTheme: Theme) => {
@@ -62,7 +72,7 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme, mounted }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme, cycleTheme, mounted }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -3,12 +3,11 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect, useCallback } from "react";
-import { BookOpen, Upload } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import FileUpload from "@/components/FileUpload";
 import NovelCard from "@/components/NovelCard";
 import SearchBar from "@/components/SearchBar";
-import { useTheme } from "@/components/ThemeProvider";
-import { Sun, Moon } from "lucide-react";
+import ThemeSelector from "@/components/ThemeSelector";
 
 interface Novel {
   _id: string;
@@ -24,7 +23,6 @@ export default function HomePage() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const { theme, toggleTheme } = useTheme();
 
   const fetchNovels = useCallback(async () => {
     try {
@@ -69,19 +67,20 @@ export default function HomePage() {
 
   return (
     <main className="main-container">
-      <header className="header">
-        <div style={{ position: "absolute", top: "1rem", right: "1rem" }}>
-          <button
-            onClick={toggleTheme}
-            className="action-btn"
-            title="Toggle Theme"
-          >
-            {theme === "dark" ? <Sun size={22} /> : <Moon size={22} />}
-          </button>
+      <nav className="app-navbar" style={{ borderRadius: "16px", marginBottom: "2rem" }}>
+        <div className="app-navbar-brand">
+          <BookOpen className="brand-icon" size={24} />
+          <span>NovelReader</span>
         </div>
+        <div className="app-navbar-actions">
+          <ThemeSelector />
+        </div>
+      </nav>
+
+      <header className="header">
         <h1>NovelReader</h1>
         <p>
-          Upload your TXT novels and enjoy reading them in a beautiful interface
+          Upload novel TXT dan nikmati membaca dengan tampilan interaktif & nyaman di web dan mobile
         </p>
       </header>
 

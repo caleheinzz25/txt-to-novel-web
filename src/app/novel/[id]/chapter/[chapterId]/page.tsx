@@ -1,6 +1,14 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
+import Link from "next/link";
+import {
+  ChevronLeft,
+  ChevronRight,
+  List,
+  ArrowUp,
+  BookOpen,
+} from "lucide-react";
 import ReaderControls from "@/components/ReaderControls";
 import ChapterList from "@/components/ChapterList";
 
@@ -38,6 +46,7 @@ export default function ChapterReaderPage({
   const [error, setError] = useState<string | null>(null);
   const [fontSize, setFontSize] = useState(18);
   const [showChapterList, setShowChapterList] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   useEffect(() => {
     // Load saved font size
@@ -46,6 +55,30 @@ export default function ChapterReaderPage({
       setFontSize(parseInt(savedFontSize, 10));
     }
   }, []);
+
+  // Track reading scroll progress
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
+      if (totalHeight > 0) {
+        const progress = Math.min(
+          100,
+          Math.max(0, (window.scrollY / totalHeight) * 100)
+        );
+        setScrollProgress(progress);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Scroll to top when chapterId changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    setScrollProgress(0);
+  }, [chapterId]);
 
   useEffect(() => {
     async function fetchChapter() {
@@ -91,6 +124,10 @@ export default function ChapterReaderPage({
     localStorage.setItem("readerFontSize", size.toString());
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // Format content into readable paragraphs preserving line breaks and indentation
   const formatContent = (content: string) => {
     if (!content) return [];
@@ -116,6 +153,13 @@ export default function ChapterReaderPage({
       <div className="reader-container">
         <div className="loading" style={{ minHeight: "100vh" }}>
           <h3>{error || "Chapter not found"}</h3>
+          <Link
+            href={`/novel/${novelId}`}
+            className="back-btn"
+            style={{ marginTop: "1rem", display: "inline-flex" }}
+          >
+            Kembali ke Daftar Bab
+          </Link>
         </div>
       </div>
     );
@@ -125,6 +169,16 @@ export default function ChapterReaderPage({
 
   return (
     <div className="reader-container">
+      {/* Real-time reading progress bar at the very top */}
+      <div
+        className="reader-progress-bar"
+        style={{ width: `${scrollProgress}%` }}
+        role="progressbar"
+        aria-valuenow={Math.round(scrollProgress)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+      />
+
       <ReaderControls
         novelId={novelId}
         novelName={chapter.novelName}
@@ -137,11 +191,114 @@ export default function ChapterReaderPage({
         onShowChapterList={() => setShowChapterList(true)}
       />
 
-      <article className="reader-content" style={{ fontSize: `${fontSize}px` }}>
+      <article
+        className="reader-content"
+        style={{
+          fontSize: `${fontSize}px`,
+          lineHeight: fontSize > 20 ? 1.8 : 1.9,
+        }}
+      >
+        <header style={{ marginBottom: "2rem", textAlign: "center" }}>
+          <h1
+            style={{
+              fontSize: "1.4em",
+              fontWeight: 700,
+              marginBottom: "0.5rem",
+              lineHeight: 1.3,
+            }}
+          >
+            {chapter.name}
+          </h1>
+          <div
+            style={{
+              fontSize: "0.8em",
+              color: "var(--text-muted)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "0.75rem",
+            }}
+          >
+            <span>Bab {chapter.chap}</span>
+            <span>•</span>
+            <span>{chapter.wordCount.toLocaleString()} kata</span>
+          </div>
+        </header>
+
         {paragraphs.map((paragraph, index) => (
           <p key={index}>{paragraph}</p>
         ))}
       </article>
+
+      {/* Interactive Bottom Navigation for Readers */}
+      <nav className="reader-bottom-nav" aria-label="Navigasi bab selesai">
+        <div className="reader-bottom-progress">
+          <span>
+            Bab {chapter.chap} dari {chapter.totalChapters}
+          </span>
+          <span>Progres Baca: {Math.round(scrollProgress)}%</span>
+        </div>
+
+        <div className="reader-bottom-actions">
+          {chapter.navigation.prevId ? (
+            <Link
+              href={`/novel/${novelId}/chapter/${chapter.navigation.prevId}`}
+              className="bottom-nav-btn"
+            >
+              <ChevronLeft size={20} />
+              <span>Sebelumnya</span>
+            </Link>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="bottom-nav-btn disabled"
+            >
+              <ChevronLeft size={20} />
+              <span>Sebelumnya</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setShowChapterList(true)}
+            className="bottom-nav-btn"
+            title="Buka Daftar Bab"
+            aria-label="Buka Daftar Bab"
+          >
+            <List size={20} />
+            <span>Daftar Bab</span>
+          </button>
+
+          {chapter.navigation.nextId ? (
+            <Link
+              href={`/novel/${novelId}/chapter/${chapter.navigation.nextId}`}
+              className="bottom-nav-btn primary"
+            >
+              <span>Selanjutnya</span>
+              <ChevronRight size={20} />
+            </Link>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="bottom-nav-btn disabled"
+            >
+              <span>Tamat</span>
+            </button>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={scrollToTop}
+          className="back-to-top-btn"
+          aria-label="Kembali ke atas"
+        >
+          <ArrowUp size={16} />
+          <span>Kembali ke Atas</span>
+        </button>
+      </nav>
 
       {showChapterList && (
         <ChapterList

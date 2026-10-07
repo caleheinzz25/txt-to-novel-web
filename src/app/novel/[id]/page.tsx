@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useMemo } from "react";
 import Link from "next/link";
 import {
   ChevronLeft,
@@ -11,7 +11,12 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  Search,
+  ArrowUpDown,
+  XCircle,
+  Play,
 } from "lucide-react";
+import ThemeSelector from "@/components/ThemeSelector";
 
 interface Chapter {
   _id: string;
@@ -38,6 +43,10 @@ export default function NovelDetailPage({
   const [novel, setNovel] = useState<Novel | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Chapter list filter & sort
+  const [chapterSearch, setChapterSearch] = useState("");
+  const [chapterAscending, setChapterAscending] = useState(true);
 
   // Split mode state: 'fixed_words' or 'auto_heading'
   const [splitMode, setSplitMode] = useState<"fixed_words" | "auto_heading">(
@@ -113,18 +122,18 @@ export default function NovelDetailPage({
           type: "success",
           message:
             data.message ||
-            `Successfully re-split into ${data.data.totalChapters} chapters!`,
+            `Berhasil membagi ulang menjadi ${data.data.totalChapters} bab!`,
         });
       } else {
         setResplitStatus({
           type: "error",
-          message: data.message || "Failed to re-split novel",
+          message: data.message || "Gagal memproses pemisahan bab",
         });
       }
     } catch {
       setResplitStatus({
         type: "error",
-        message: "Failed to communicate with server",
+        message: "Gagal terhubung dengan server",
       });
     } finally {
       setResplitting(false);
@@ -132,7 +141,7 @@ export default function NovelDetailPage({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString("id-ID", {
       day: "numeric",
       month: "long",
       year: "numeric",
@@ -145,12 +154,32 @@ export default function NovelDetailPage({
     return count.toString();
   };
 
+  const filteredChapters = useMemo(() => {
+    if (!novel) return [];
+    let list = novel.chapters;
+
+    if (chapterSearch.trim()) {
+      const q = chapterSearch.toLowerCase().trim();
+      list = list.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.chap.toString().includes(q)
+      );
+    }
+
+    if (!chapterAscending) {
+      list = [...list].reverse();
+    }
+
+    return list;
+  }, [novel, chapterSearch, chapterAscending]);
+
   if (loading) {
     return (
       <main className="main-container">
         <div className="loading">
           <div className="loading-spinner" />
-          <p>Loading novel...</p>
+          <p>Memuat novel...</p>
         </div>
       </main>
     );
@@ -160,10 +189,10 @@ export default function NovelDetailPage({
     return (
       <main className="main-container">
         <div className="empty-state">
-          <h3>{error || "Novel not found"}</h3>
+          <h3>{error || "Novel tidak ditemukan"}</h3>
           <Link href="/" className="back-link">
             <ChevronLeft size={20} />
-            Back to Library
+            Kembali ke Library
           </Link>
         </div>
       </main>
@@ -172,12 +201,18 @@ export default function NovelDetailPage({
 
   return (
     <main className="main-container">
-      <div className="novel-detail">
-        <Link href="/" className="back-link">
+      {/* Top Navigation */}
+      <nav className="app-navbar" style={{ borderRadius: "16px", marginBottom: "1.5rem" }}>
+        <Link href="/" className="app-navbar-brand">
           <ChevronLeft size={20} />
-          Back to Library
+          <span>Library</span>
         </Link>
+        <div className="app-navbar-actions">
+          <ThemeSelector />
+        </div>
+      </nav>
 
+      <div className="novel-detail">
         <div className="novel-header">
           <div className="novel-cover">
             <BookOpen size={64} />
@@ -189,17 +224,40 @@ export default function NovelDetailPage({
             <div className="novel-meta">
               <div className="stat">
                 <FileText size={18} />
-                <span>{novel.totalChapters} Chapters</span>
+                <span>{novel.totalChapters} Bab</span>
               </div>
               <div className="stat">
                 <BookOpen size={18} />
-                <span>{formatWordCount(novel.totalWords)} Words</span>
+                <span>{formatWordCount(novel.totalWords)} Kata</span>
               </div>
               <div className="stat">
                 <Calendar size={18} />
                 <span>{formatDate(novel.createdAt)}</span>
               </div>
             </div>
+
+            {/* Tombol Aksi Mulai Baca */}
+            {novel.chapters.length > 0 && (
+              <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
+                <Link
+                  href={`/novel/${novel._id}/chapter/${novel.chapters[0]._id}`}
+                  className="upload-btn"
+                  style={{ display: "inline-flex", gap: "0.5rem" }}
+                >
+                  <Play size={18} fill="currentColor" />
+                  <span>Mulai Baca (Bab 1)</span>
+                </Link>
+                {novel.chapters.length > 1 && (
+                  <Link
+                    href={`/novel/${novel._id}/chapter/${novel.chapters[novel.chapters.length - 1]._id}`}
+                    className="chapter-sort-btn"
+                    style={{ padding: "0.75rem 1.25rem", borderRadius: "12px" }}
+                  >
+                    <span>Bab Terakhir (#{novel.chapters[novel.chapters.length - 1].chap})</span>
+                  </Link>
+                )}
+              </div>
+            )}
 
             {/* 2 Opsi Pemisahan Bab (Chapter Splitting) */}
             <div className="words-control-box">
@@ -370,37 +428,69 @@ export default function NovelDetailPage({
                 </div>
               )}
             </div>
-
-            {novel.chapters.length > 0 && (
-              <Link
-                href={`/novel/${novel._id}/chapter/${novel.chapters[0]._id}`}
-                className="upload-btn"
-                style={{ display: "inline-flex", marginTop: "1rem" }}
-              >
-                Start Reading
-              </Link>
-            )}
           </div>
         </div>
 
+        {/* Chapters Section with Search and Sorting */}
         <section className="chapters-section">
-          <h2>Chapters</h2>
+          <div className="chapters-toolbar">
+            <h2 style={{ margin: 0 }}>
+              Daftar Bab ({filteredChapters.length}
+              {chapterSearch ? ` dari ${novel.chapters.length}` : ""})
+            </h2>
 
-          <div className="chapters-list">
-            {novel.chapters.map((chapter) => (
-              <Link
-                key={chapter._id}
-                href={`/novel/${novel._id}/chapter/${chapter._id}`}
-                className="chapter-item"
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", flex: 1, justifyContent: "flex-end" }}>
+              <div className="chapter-search-box">
+                <Search size={16} className="search-icon" />
+                <input
+                  type="text"
+                  placeholder="Cari nomor atau judul bab..."
+                  value={chapterSearch}
+                  onChange={(e) => setChapterSearch(e.target.value)}
+                  aria-label="Cari bab"
+                />
+                {chapterSearch && (
+                  <XCircle
+                    size={16}
+                    className="clear-icon"
+                    onClick={() => setChapterSearch("")}
+                  />
+                )}
+              </div>
+
+              <button
+                type="button"
+                className="chapter-sort-btn"
+                onClick={() => setChapterAscending(!chapterAscending)}
+                title={chapterAscending ? "Urutan: Bab 1 -> Terakhir" : "Urutan: Terakhir -> Bab 1"}
               >
-                <span className="chapter-num">{chapter.chap}</span>
-                <span className="chapter-title">{chapter.name}</span>
-                <span className="chapter-words">
-                  {formatWordCount(chapter.wordCount)} words
-                </span>
-              </Link>
-            ))}
+                <ArrowUpDown size={16} />
+                <span>{chapterAscending ? "Bab 1 → N" : "Bab N → 1"}</span>
+              </button>
+            </div>
           </div>
+
+          {filteredChapters.length === 0 ? (
+            <div className="empty-state" style={{ padding: "2.5rem 1rem" }}>
+              <p>Tidak ada bab yang cocok dengan pencarian &quot;{chapterSearch}&quot;</p>
+            </div>
+          ) : (
+            <div className="chapters-list">
+              {filteredChapters.map((chapter) => (
+                <Link
+                  key={chapter._id}
+                  href={`/novel/${novel._id}/chapter/${chapter._id}`}
+                  className="chapter-item"
+                >
+                  <span className="chapter-num">{chapter.chap}</span>
+                  <span className="chapter-title">{chapter.name}</span>
+                  <span className="chapter-words">
+                    {formatWordCount(chapter.wordCount)} kata
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </main>
