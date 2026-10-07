@@ -59,7 +59,7 @@ export default function ChapterReaderPage({
         } else {
           setError(data.message || "Chapter not found");
         }
-      } catch (err) {
+      } catch {
         setError("Failed to load chapter");
       } finally {
         setLoading(false);
@@ -91,24 +91,13 @@ export default function ChapterReaderPage({
     localStorage.setItem("readerFontSize", size.toString());
   };
 
-  // Format content with paragraphs
+  // Format content into readable paragraphs preserving line breaks and indentation
   const formatContent = (content: string) => {
-    // Split by double newlines or long whitespace sequences for paragraphs
-    const paragraphs = content.split(/\n\n+|\r\n\r\n+/).filter((p) => p.trim());
-
-    if (paragraphs.length <= 1) {
-      // If no clear paragraph breaks, try single newlines
-      const singleNewlineParagraphs = content
-        .split(/\n|\r\n/)
-        .filter((p) => p.trim());
-      if (singleNewlineParagraphs.length > 1) {
-        return singleNewlineParagraphs;
-      }
-      // Otherwise, split by sentences every ~3-5 sentences for readability
-      return [content];
-    }
-
-    return paragraphs;
+    if (!content) return [];
+    return content
+      .split(/\r?\n/)
+      .map((line) => line.trimEnd())
+      .filter((line) => line.trim().length > 0);
   };
 
   if (loading) {

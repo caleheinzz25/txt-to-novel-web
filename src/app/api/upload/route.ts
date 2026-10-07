@@ -4,7 +4,6 @@ import { createNovel } from "@/lib/models/novels";
 import { createManyChapters } from "@/lib/models/chapters";
 import {
   splitNovelIntoChapters,
-  countWords,
   extractTitle,
 } from "@/lib/textProcessor";
 
@@ -15,6 +14,14 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const customTitle = formData.get("title") as string | null;
+    const wordsPerChapterRaw = formData.get("wordsPerChapter") as string | null;
+    const wordsPerChapter = wordsPerChapterRaw
+      ? Math.max(100, Math.min(50000, parseInt(wordsPerChapterRaw, 10)))
+      : 2000;
+    const forceWordSplitRaw = formData.get("forceWordSplit") as string | null;
+    const forceWordSplit = forceWordSplitRaw === "true";
+    const headingPreset = (formData.get("headingPreset") as any) || "auto";
+    const customPattern = (formData.get("customPattern") as string) || "";
 
     if (!file) {
       return NextResponse.json(
@@ -58,7 +65,13 @@ export async function POST(request: NextRequest) {
     const title = customTitle || extractTitle(text, file.name);
 
     // Split into chapters
-    const processedChapters = splitNovelIntoChapters(text,2000);
+    const processedChapters = splitNovelIntoChapters(
+      text,
+      wordsPerChapter,
+      forceWordSplit,
+      headingPreset,
+      customPattern
+    );
 
     if (processedChapters.length === 0) {
       return NextResponse.json(
@@ -83,7 +96,7 @@ export async function POST(request: NextRequest) {
     // Create chapter documents
     const chapters = processedChapters.map((ch, index) => ({
       novelId: novel._id as ObjectId,
-      name: `Chapter ${index + 1}`,
+      name: ch.title || `Chapter ${index + 1}`,
       chap: index + 1,
       content: ch.content,
       wordCount: ch.wordCount,

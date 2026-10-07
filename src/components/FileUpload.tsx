@@ -24,6 +24,22 @@ export default function FileUpload({
 }: FileUploadProps) {
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<UploadStatus>("idle");
+  const [splitMode, setSplitMode] = useState<"fixed_words" | "auto_heading">(
+    "fixed_words"
+  );
+  const [wordsPerChapter, setWordsPerChapter] = useState(2000);
+  const [headingPreset, setHeadingPreset] = useState<
+    | "auto"
+    | "chinese"
+    | "japanese"
+    | "korean"
+    | "cjk"
+    | "indonesian"
+    | "english"
+    | "numeric"
+    | "custom"
+  >("auto");
+  const [customPattern, setCustomPattern] = useState("");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
 
@@ -50,8 +66,15 @@ export default function FileUpload({
     setStatus("uploading");
     setProgress(0);
 
+    const isFixedWords = splitMode === "fixed_words";
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("forceWordSplit", isFixedWords ? "true" : "false");
+    formData.append("wordsPerChapter", wordsPerChapter.toString());
+    formData.append("headingPreset", isFixedWords ? "auto" : headingPreset);
+    if (!isFixedWords && headingPreset === "custom" && customPattern.trim()) {
+      formData.append("customPattern", customPattern.trim());
+    }
 
     try {
       // Simulate progress for better UX
@@ -175,6 +198,180 @@ export default function FileUpload({
             <div className="status-message error">
               <AlertCircle size={20} />
               <span>{message}</span>
+            </div>
+          )}
+
+          {status === "idle" && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "0.75rem",
+                marginBottom: "0.75rem",
+                width: "100%",
+                maxWidth: "380px",
+                padding: "0.85rem",
+                background: "var(--bg-primary)",
+                borderRadius: "12px",
+                border: "1px solid var(--border-color)",
+              }}
+            >
+              {/* Selector 2 Opsi */}
+              <div
+                style={{
+                  display: "flex",
+                  width: "100%",
+                  gap: "0.35rem",
+                  background: "var(--bg-secondary)",
+                  padding: "0.25rem",
+                  borderRadius: "8px",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setSplitMode("fixed_words")}
+                  style={{
+                    flex: 1,
+                    padding: "0.4rem 0.5rem",
+                    borderRadius: "6px",
+                    border: "none",
+                    background:
+                      splitMode === "fixed_words"
+                        ? "var(--accent-primary)"
+                        : "transparent",
+                    color:
+                      splitMode === "fixed_words"
+                        ? "white"
+                        : "var(--text-secondary)",
+                    fontWeight: 600,
+                    fontSize: "0.8rem",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  Fixed Word Count
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSplitMode("auto_heading")}
+                  style={{
+                    flex: 1,
+                    padding: "0.4rem 0.5rem",
+                    borderRadius: "6px",
+                    border: "none",
+                    background:
+                      splitMode === "auto_heading"
+                        ? "var(--accent-primary)"
+                        : "transparent",
+                    color:
+                      splitMode === "auto_heading"
+                        ? "white"
+                        : "var(--text-secondary)",
+                    fontWeight: 600,
+                    fontSize: "0.8rem",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  Deteksi Heading
+                </button>
+              </div>
+
+              {splitMode === "fixed_words" ? (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    width: "100%",
+                    fontSize: "0.85rem",
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  <span>Target Kata / Bab:</span>
+                  <input
+                    type="number"
+                    min={200}
+                    max={50000}
+                    step={500}
+                    value={wordsPerChapter}
+                    onChange={(e) =>
+                      setWordsPerChapter(
+                        Math.max(100, parseInt(e.target.value, 10) || 100)
+                      )
+                    }
+                    style={{
+                      width: "85px",
+                      padding: "0.3rem 0.5rem",
+                      borderRadius: "6px",
+                      border: "1px solid var(--border-color)",
+                      background: "var(--bg-secondary)",
+                      color: "var(--text-primary)",
+                      fontWeight: 600,
+                      textAlign: "center",
+                    }}
+                  />
+                </div>
+              ) : (
+                <div style={{ width: "100%" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      width: "100%",
+                      fontSize: "0.85rem",
+                      color: "var(--text-secondary)",
+                    }}
+                  >
+                    <span>Format Penanda:</span>
+                    <select
+                      value={headingPreset}
+                      onChange={(e) => setHeadingPreset(e.target.value as any)}
+                      style={{
+                        padding: "0.35rem 0.5rem",
+                        borderRadius: "6px",
+                        border: "1px solid var(--border-color)",
+                        background: "var(--bg-secondary)",
+                        color: "var(--text-primary)",
+                        fontSize: "0.85rem",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <option value="auto">Auto-Detect</option>
+                      <option value="chinese">Chinese (第X章)</option>
+                      <option value="japanese">Japanese (第X話)</option>
+                      <option value="korean">Korean (X화)</option>
+                      <option value="indonesian">Bab (Indo)</option>
+                      <option value="english">Chapter (Eng)</option>
+                      <option value="numeric">1., 2. (Numbers)</option>
+                      <option value="custom">Custom...</option>
+                    </select>
+                  </div>
+
+                  {headingPreset === "custom" && (
+                    <div style={{ width: "100%", marginTop: "0.5rem" }}>
+                      <input
+                        type="text"
+                        placeholder="e.g. Arc \d+|STAGE \d+"
+                        value={customPattern}
+                        onChange={(e) => setCustomPattern(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: "0.35rem 0.5rem",
+                          borderRadius: "6px",
+                          border: "1px solid var(--border-color)",
+                          background: "var(--bg-secondary)",
+                          color: "var(--text-primary)",
+                          fontSize: "0.85rem",
+                          fontFamily: "monospace",
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
