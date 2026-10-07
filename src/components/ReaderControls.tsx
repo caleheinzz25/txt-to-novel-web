@@ -53,6 +53,8 @@ export default function ReaderControls({
     }
   };
 
+  const [titleExpanded, setTitleExpanded] = useState(false);
+
   const getThemeIcon = () => {
     if (theme === "dark") return <Moon size={20} />;
     if (theme === "sepia") return <Coffee size={20} />;
@@ -62,7 +64,7 @@ export default function ReaderControls({
   return (
     <div className="reader-controls">
       <div className="reader-header">
-        <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+        <div className="reader-header-left">
           <Link
             href={`/novel/${novelId}`}
             className="back-btn"
@@ -81,10 +83,24 @@ export default function ReaderControls({
           </Link>
         </div>
 
-        <div className="reader-title">
+        <div
+          className={`reader-title ${titleExpanded ? "expanded" : ""}`}
+          onClick={() => setTitleExpanded(!titleExpanded)}
+          title={`Klik untuk ${titleExpanded ? "ciutkan" : "lihat judul lengkap"}: ${novelName}`}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              setTitleExpanded(!titleExpanded);
+            }
+          }}
+        >
           <h2>{novelName}</h2>
           <span>
             Bab {currentChapter} dari {totalChapters}
+            <small style={{ marginLeft: "0.4rem", opacity: 0.7, fontSize: "0.68rem" }}>
+              {titleExpanded ? "(ciutkan)" : "(klik judul)"}
+            </small>
           </span>
         </div>
 

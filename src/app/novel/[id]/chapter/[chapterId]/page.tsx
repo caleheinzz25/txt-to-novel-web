@@ -205,6 +205,8 @@ export default function ChapterReaderPage({
               fontWeight: 700,
               marginBottom: "0.5rem",
               lineHeight: 1.3,
+              wordBreak: "break-word",
+              overflowWrap: "anywhere",
             }}
           >
             {chapter.name}
