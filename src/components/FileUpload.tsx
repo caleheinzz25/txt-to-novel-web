@@ -58,7 +58,7 @@ export default function FileUpload({
       "text/plain": [".txt"],
     },
     maxFiles: 1,
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 50 * 1024 * 1024, // 50MB
   });
 
   const handleUpload = async () => {
@@ -66,6 +66,7 @@ export default function FileUpload({
 
     setStatus("uploading");
     setProgress(0);
+    setMessage("");
 
     const isFixedWords = splitMode === "fixed_words";
     const formData = new FormData();
@@ -79,10 +80,10 @@ export default function FileUpload({
     }
 
     try {
-      // Simulate progress for better UX
+      // Smooth progress indicator
       const progressInterval = setInterval(() => {
-        setProgress((prev) => Math.min(prev + 10, 90));
-      }, 200);
+        setProgress((prev) => Math.min(prev + 5, 95));
+      }, 300);
 
       const response = await fetch("/api/upload", {
         method: "POST",
@@ -91,12 +92,30 @@ export default function FileUpload({
 
       clearInterval(progressInterval);
 
+      if (!response.ok) {
+        let errorMsg = `Server error (${response.status})`;
+        try {
+          const errData = await response.json();
+          if (errData && errData.message) errorMsg = errData.message;
+        } catch {
+          if (response.status === 413) {
+            errorMsg = "Ukuran file terlalu besar untuk server (413 Payload Too Large).";
+          } else if (response.status === 504) {
+            errorMsg = "Proses upload memakan waktu terlalu lama (504 Timeout).";
+          }
+        }
+        setStatus("error");
+        setMessage(errorMsg);
+        onUploadError?.(errorMsg);
+        return;
+      }
+
       const result = await response.json();
 
       if (result.success) {
         setProgress(100);
         setStatus("success");
-        setMessage(`${result.data.totalChapters} chapters created`);
+        setMessage(result.message || `${result.data.totalChapters} bab berhasil dibuat`);
         onUploadSuccess?.(result.novelId);
 
         // Reset after success
@@ -108,13 +127,17 @@ export default function FileUpload({
         }, 2000);
       } else {
         setStatus("error");
-        setMessage(result.message);
+        setMessage(result.message || "Gagal memproses file.");
         onUploadError?.(result.message);
       }
     } catch (error) {
+      const errMsg =
+        error instanceof Error
+          ? error.message
+          : "Upload gagal. Silakan periksa koneksi dan coba lagi.";
       setStatus("error");
-      setMessage("Upload failed. Please try again.");
-      onUploadError?.("Upload failed");
+      setMessage(errMsg);
+      onUploadError?.(errMsg);
     }
   };
 
@@ -151,7 +174,7 @@ export default function FileUpload({
                 ? "Drop your TXT file here..."
                 : "Drag & drop a TXT file here, or click to select"}
             </p>
-            <p className="dropzone-hint">Max file size: 10MB</p>
+            <p className="dropzone-hint">Max file size: 50MB</p>
           </div>
         ) : (
           <div className="file-preview" onClick={(e) => e.stopPropagation()}>
@@ -203,7 +226,7 @@ export default function FileUpload({
             </div>
           )}
 
-          {status === "idle" && (
+          {(status === "idle" || status === "error") && (
             <div
               style={{
                 display: "flex",
@@ -442,10 +465,10 @@ export default function FileUpload({
             </div>
           )}
 
-          {status === "idle" && (
+          {(status === "idle" || status === "error") && (
             <button onClick={handleUpload} className="upload-btn">
               <Upload size={20} />
-              Upload & Process
+              {status === "error" ? "Coba Lagi (Retry Upload)" : "Upload & Process"}
             </button>
           )}
 

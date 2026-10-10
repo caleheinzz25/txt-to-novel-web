@@ -38,6 +38,8 @@ export async function createChapter(
 export async function createManyChapters(
   chapters: Omit<Chapter, "_id" | "createdAt" | "updatedAt">[]
 ): Promise<ObjectId[]> {
+  if (chapters.length === 0) return [];
+
   const collection = await getCollection();
   const now = new Date();
   const chaptersWithDates = chapters.map((chapter) => ({
@@ -45,8 +47,17 @@ export async function createManyChapters(
     createdAt: now,
     updatedAt: now,
   }));
-  const result = await collection.insertMany(chaptersWithDates);
-  return Object.values(result.insertedIds);
+
+  const BATCH_SIZE = 200;
+  const insertedIds: ObjectId[] = [];
+
+  for (let i = 0; i < chaptersWithDates.length; i += BATCH_SIZE) {
+    const batch = chaptersWithDates.slice(i, i + BATCH_SIZE);
+    const result = await collection.insertMany(batch, { ordered: false });
+    insertedIds.push(...Object.values(result.insertedIds));
+  }
+
+  return insertedIds;
 }
 
 export async function getChaptersByNovelId(

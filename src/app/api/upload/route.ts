@@ -8,7 +8,10 @@ import {
 } from "@/lib/textProcessor";
 import { decodeTextBuffer } from "@/lib/encoding";
 
-const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || "10485760", 10); // 10MB default
+export const dynamic = "force-dynamic";
+export const maxDuration = 120; // 2 minutes for large novel files up to 50MB
+
+const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE || "52428800", 10); // 50MB default
 
 export async function POST(request: NextRequest) {
   try {
