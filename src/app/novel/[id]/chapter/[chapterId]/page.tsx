@@ -34,15 +34,31 @@ interface ChapterListItem {
   wordCount: number;
 }
 
+// Client-side cache to make chapter navigation instant
+const chapterCache = new Map<string, Chapter>();
+
+async function prefetchChapter(id: string) {
+  if (!id || chapterCache.has(id)) return;
+  try {
+    const res = await fetch(`/api/chapters/${id}`);
+    const data = await res.json();
+    if (data.success) {
+      chapterCache.set(id, data.data);
+    }
+  } catch {
+    // Ignore prefetch failures silently
+  }
+}
+
 export default function ChapterReaderPage({
   params,
 }: {
   params: Promise<{ id: string; chapterId: string }>;
 }) {
   const { id: novelId, chapterId } = use(params);
-  const [chapter, setChapter] = useState<Chapter | null>(null);
+  const [chapter, setChapter] = useState<Chapter | null>(() => chapterCache.get(chapterId) || null);
   const [chapters, setChapters] = useState<ChapterListItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!chapterCache.has(chapterId));
   const [error, setError] = useState<string | null>(null);
   const [fontSize, setFontSize] = useState(18);
   const [showChapterList, setShowChapterList] = useState(false);
@@ -81,25 +97,57 @@ export default function ChapterReaderPage({
   }, [chapterId]);
 
   useEffect(() => {
-    async function fetchChapter() {
+    let isCancelled = false;
+
+    async function loadChapter() {
+      // If already in cache, set immediately without spinner
+      if (chapterCache.has(chapterId)) {
+        const cached = chapterCache.get(chapterId)!;
+        setChapter(cached);
+        setLoading(false);
+        setError(null);
+
+        // Preload adjacent chapters in background
+        if (cached.navigation.nextId) prefetchChapter(cached.navigation.nextId);
+        if (cached.navigation.prevId) prefetchChapter(cached.navigation.prevId);
+        return;
+      }
+
       setLoading(true);
+      setError(null);
+
       try {
         const response = await fetch(`/api/chapters/${chapterId}`);
         const data = await response.json();
 
+        if (isCancelled) return;
+
         if (data.success) {
+          chapterCache.set(chapterId, data.data);
           setChapter(data.data);
+
+          // Preload adjacent chapters in background
+          if (data.data.navigation.nextId) prefetchChapter(data.data.navigation.nextId);
+          if (data.data.navigation.prevId) prefetchChapter(data.data.navigation.prevId);
         } else {
           setError(data.message || "Chapter not found");
         }
       } catch {
-        setError("Failed to load chapter");
+        if (!isCancelled) {
+          setError("Failed to load chapter");
+        }
       } finally {
-        setLoading(false);
+        if (!isCancelled) {
+          setLoading(false);
+        }
       }
     }
 
-    fetchChapter();
+    loadChapter();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [chapterId]);
 
   useEffect(() => {

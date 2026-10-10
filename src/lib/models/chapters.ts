@@ -16,9 +16,20 @@ export interface ChapterWithId extends Chapter {
   _id: ObjectId;
 }
 
+let indexesEnsured = false;
+
 async function getCollection(): Promise<Collection<Chapter>> {
   const db = await getDatabase();
-  return db.collection<Chapter>("chapters");
+  const collection = db.collection<Chapter>("chapters");
+
+  if (!indexesEnsured) {
+    indexesEnsured = true;
+    collection.createIndex({ novelId: 1, chap: 1 }).catch((err) => {
+      console.warn("Failed to create index on chapters collection:", err);
+    });
+  }
+
+  return collection;
 }
 
 export async function createChapter(
@@ -61,11 +72,24 @@ export async function createManyChapters(
 }
 
 export async function getChaptersByNovelId(
-  novelId: string
+  novelId: string,
+  includeContent = false
 ): Promise<ChapterWithId[]> {
   const collection = await getCollection();
+  const projection = includeContent
+    ? {}
+    : {
+        _id: 1,
+        novelId: 1,
+        name: 1,
+        chap: 1,
+        wordCount: 1,
+        createdAt: 1,
+        updatedAt: 1,
+      };
+
   return collection
-    .find({ novelId: new ObjectId(novelId) })
+    .find({ novelId: new ObjectId(novelId) }, { projection })
     .sort({ chap: 1 })
     .toArray() as Promise<ChapterWithId[]>;
 }
@@ -104,22 +128,31 @@ export async function getAdjacentChapters(
   novelId: string,
   currentChapter: number
 ): Promise<{
-  prev: ChapterWithId | null;
-  next: ChapterWithId | null;
+  prev: { _id: ObjectId; chap: number } | null;
+  next: { _id: ObjectId; chap: number } | null;
 }> {
   const collection = await getCollection();
   const novelObjId = new ObjectId(novelId);
 
   const [prev, next] = await Promise.all([
-    collection.findOne({
-      novelId: novelObjId,
-      chap: currentChapter - 1,
-    }) as Promise<ChapterWithId | null>,
-    collection.findOne({
-      novelId: novelObjId,
-      chap: currentChapter + 1,
-    }) as Promise<ChapterWithId | null>,
+    collection.findOne(
+      {
+        novelId: novelObjId,
+        chap: currentChapter - 1,
+      },
+      { projection: { _id: 1, chap: 1 } }
+    ),
+    collection.findOne(
+      {
+        novelId: novelObjId,
+        chap: currentChapter + 1,
+      },
+      { projection: { _id: 1, chap: 1 } }
+    ),
   ]);
 
-  return { prev, next };
+  return {
+    prev: prev ? { _id: prev._id, chap: prev.chap } : null,
+    next: next ? { _id: next._id, chap: next.chap } : null,
+  };
 }

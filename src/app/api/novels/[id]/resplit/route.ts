@@ -33,7 +33,7 @@ export async function POST(request: NextRequest, context: RouteParams) {
     const customPattern = body.customPattern || "";
 
     // Retrieve all existing chapters to reconstruct novel text
-    const existingChapters = await getChaptersByNovelId(id);
+    const existingChapters = await getChaptersByNovelId(id, true);
 
     if (existingChapters.length === 0) {
       return NextResponse.json(
