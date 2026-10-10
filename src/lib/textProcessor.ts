@@ -65,12 +65,12 @@ export function buildChapterRegex(
 
   // Chinese novel chapter patterns
   if (preset === "chinese") {
-    return /(?:^|\n)[ \t]*((?:第\s*[0-9１-９一二三四五六七八九十百千万]+\s*[章回节卷集部篇折]|(?:序章|终章|尾声|番外|后记|前言|楔子|引子))[^\n]*)/gi;
+    return /(?:^|\n)[ \t]*((?:第\s*[0-9１-９零〇一二三四五六七八九十百千万]+\s*[章回节卷集部篇折]|(?:序章|终章|尾声|番外|后记|前言|楔子|引子))[^\n]*)/gi;
   }
 
   // Japanese light novel / web novel chapter patterns
   if (preset === "japanese") {
-    return /(?:^|\n)[ \t]*((?:第\s*[0-9１-９一二三四五六七八九十百千万]+\s*[話话章幕節巻篇]|(?:[0-9１-９]+|[一二三四五六七八九十]+)\s*[話话]|(?:プロローグ|エピローグ|幕間|あとがき|序章|終章))[^\n]*)/gi;
+    return /(?:^|\n)[ \t]*((?:第\s*[0-9１-９零〇一二三四五六七八九十百千万]+\s*[話话章幕節巻篇]|(?:[0-9１-９]+|[零〇一二三四五六七八九十]+)\s*[話话]|(?:プロローグ|エピローグ|幕間|あとがき|序章|終章))[^\n]*)/gi;
   }
 
   // Korean web novel chapter patterns
@@ -80,7 +80,7 @@ export function buildChapterRegex(
 
   // Combined CJK
   if (preset === "cjk") {
-    return /(?:^|\n)[ \t]*((?:(?:제\s*[0-9]+\s*[화장편부회]|[0-9]+\s*[화장편부회])(?:[.:\s\-]|$)|(?:第\s*[0-9１-９一二三四五六七八九十百千万]+\s*[章回节卷集部话話幕篇折]|(?:[0-9１-９]+|[一二三四五六七八九十]+)\s*[話话])|(?:프롤로그|에필로그|외전|후기|서막|プロローグ|エピローグ|幕間|あとがき|序章|終章|终章|尾声|番外|后记|前言|楔子|引子))[^\n]*)/gi;
+    return /(?:^|\n)[ \t]*((?:(?:제\s*[0-9]+\s*[화장편부회]|[0-9]+\s*[화장편부회])(?:[.:\s\-]|$)|(?:第\s*[0-9１-９零〇一二三四五六七八九十百千万]+\s*[章回节卷集部话話幕篇折]|(?:[0-9１-９]+|[零〇一二三四五六七八九十]+)\s*[話话])|(?:프롤로그|에필로그|외전|후기|서막|プロローグ|エピローグ|幕間|あとがき|序章|終章|终章|尾声|番外|后记|前言|楔子|引子))[^\n]*)/gi;
   }
 
   if (preset === "indonesian") {
@@ -96,7 +96,7 @@ export function buildChapterRegex(
   }
 
   // "auto": Comprehensive detection covering Indonesian, English, Chinese, Japanese, Korean, and special sections
-  return /(?:^|\n)[ \t]*((?:(?:제\s*[0-9]+\s*[화장편부회]|[0-9]+\s*[화장편부회])(?:[.:\s\-]|$)|(?:第\s*[0-9１-９一二三四五六七八九十百千万]+\s*[章回节卷集部话話幕篇折]|(?:[0-9１-９]+|[一二三四五六七八九十]+)\s*[話话])|(?:Chapter|CHAPTER|Ch\.|Ch|Bab|BAB|Bagian|BAGIAN|Episode|EPISODE|Part|PART|Book|BOOK|Volume|VOLUME|Vol\.|Act|ACT|Section|SECTION)\s+(?:[0-9IVXLCDM]+|[一二三四五六七八九十百千万]+|One|Two|Three|Four|Five|Six|Seven|Eight|Nine|Ten)|(?:프롤로그|에필로그|외전|후기|서막|プロローグ|エピローグ|幕間|あとがき|Prologue|PROLOGUE|Prolog|PROLOG|Epilogue|EPILOGUE|Epilog|EPILOG|Interlude|INTERLUDE|Afterword|序章|終章|终章|尾声|番外|后记|前言|楔子|引子))[^\n]*)/gi;
+  return /(?:^|\n)[ \t]*((?:(?:제\s*[0-9]+\s*[화장편부회]|[0-9]+\s*[화장편부회])(?:[.:\s\-]|$)|(?:第\s*[0-9１-９零〇一二三四五六七八九十百千万]+\s*[章回节卷集部话話幕篇折]|(?:[0-9１-９]+|[零〇一二三四五六七八九十]+)\s*[話话])|(?:Chapter|CHAPTER|Ch\.|Ch|Bab|BAB|Bagian|BAGIAN|Episode|EPISODE|Part|PART|Book|BOOK|Volume|VOLUME|Vol\.|Act|ACT|Section|SECTION)\s+(?:[0-9IVXLCDM]+|[零〇一二三四五六七八九十百千万]+|One|Two|Three|Four|Five|Six|Seven|Eight|Nine|Ten)|(?:프롤로그|에필로그|외전|후기|서막|プロローグ|エピローグ|幕間|あとがき|Prologue|PROLOGUE|Prolog|PROLOG|Epilogue|EPILOGUE|Epilog|EPILOG|Interlude|INTERLUDE|Afterword|序章|終章|终章|尾声|番外|后记|前言|楔子|引子))[^\n]*)/gi;
 }
 
 /**

@@ -40,6 +40,7 @@ export default function FileUpload({
     | "custom"
   >("auto");
   const [customPattern, setCustomPattern] = useState("");
+  const [encoding, setEncoding] = useState("auto");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
 
@@ -72,6 +73,7 @@ export default function FileUpload({
     formData.append("forceWordSplit", isFixedWords ? "true" : "false");
     formData.append("wordsPerChapter", wordsPerChapter.toString());
     formData.append("headingPreset", isFixedWords ? "auto" : headingPreset);
+    formData.append("encoding", encoding);
     if (!isFixedWords && headingPreset === "custom" && customPattern.trim()) {
       formData.append("customPattern", customPattern.trim());
     }
@@ -401,6 +403,42 @@ export default function FileUpload({
                   )}
                 </div>
               )}
+
+              {/* Encoding Selector Row */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  fontSize: "0.85rem",
+                  color: "var(--text-secondary)",
+                  paddingTop: "0.6rem",
+                  borderTop: "1px dashed var(--border-color)",
+                }}
+              >
+                <span>Encoding / Karakter:</span>
+                <select
+                  value={encoding}
+                  onChange={(e) => setEncoding(e.target.value)}
+                  style={{
+                    padding: "0.35rem 0.5rem",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border-color)",
+                    background: "var(--bg-secondary)",
+                    color: "var(--text-primary)",
+                    fontSize: "0.825rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  <option value="auto">Auto-Detect (Rekomendasi)</option>
+                  <option value="gb18030">GBK / GB18030 (Chinese / 中文)</option>
+                  <option value="utf-8">UTF-8 Standar</option>
+                  <option value="big5">Big5 (Trad. Chinese / 繁體)</option>
+                  <option value="shift_jis">Shift-JIS (Japanese / 日本語)</option>
+                  <option value="euc-kr">EUC-KR (Korean / 한국어)</option>
+                </select>
+              </div>
             </div>
           )}
 
