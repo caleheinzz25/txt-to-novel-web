@@ -13,10 +13,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChaptersRouteImport } from './routes/api/chapters'
 import { Route as ApiNovelsRouteImport } from './routes/api/novels'
 import { Route as ApiUploadRouteImport } from './routes/api/upload'
-import { Route as NovelIdRouteImport } from './routes/novel.$id'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiChaptersIdRouteImport } from './routes/api/chapters.$id'
 import { Route as ApiNovelsIdRouteImport } from './routes/api/novels.$id'
+import { Route as NovelIdIndexRouteImport } from './routes/novel.$id.index'
 import { Route as ApiNovelsIdResplitRouteImport } from './routes/api/novels.$id.resplit'
 import { Route as NovelIdChapterChapterIdRouteImport } from './routes/novel.$id.chapter.$chapterId'
 
@@ -40,11 +40,6 @@ const ApiUploadRoute = ApiUploadRouteImport.update({
   path: '/api/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NovelIdRoute = NovelIdRouteImport.update({
-  id: '/novel/$id',
-  path: '/novel/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -60,15 +55,20 @@ const ApiNovelsIdRoute = ApiNovelsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiNovelsRoute,
 } as any)
+const NovelIdIndexRoute = NovelIdIndexRouteImport.update({
+  id: '/novel/$id/',
+  path: '/novel/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiNovelsIdResplitRoute = ApiNovelsIdResplitRouteImport.update({
   id: '/resplit',
   path: '/resplit',
   getParentRoute: () => ApiNovelsIdRoute,
 } as any)
 const NovelIdChapterChapterIdRoute = NovelIdChapterChapterIdRouteImport.update({
-  id: '/chapter/$chapterId',
-  path: '/chapter/$chapterId',
-  getParentRoute: () => NovelIdRoute,
+  id: '/novel/$id/chapter/$chapterId',
+  path: '/novel/$id/chapter/$chapterId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -76,10 +76,10 @@ export interface FileRoutesByFullPath {
   '/api/chapters': typeof ApiChaptersRouteWithChildren
   '/api/novels': typeof ApiNovelsRouteWithChildren
   '/api/upload': typeof ApiUploadRoute
-  '/novel/$id': typeof NovelIdRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chapters/$id': typeof ApiChaptersIdRoute
   '/api/novels/$id': typeof ApiNovelsIdRouteWithChildren
+  '/novel/$id/': typeof NovelIdIndexRoute
   '/api/novels/$id/resplit': typeof ApiNovelsIdResplitRoute
   '/novel/$id/chapter/$chapterId': typeof NovelIdChapterChapterIdRoute
 }
@@ -88,10 +88,10 @@ export interface FileRoutesByTo {
   '/api/chapters': typeof ApiChaptersRouteWithChildren
   '/api/novels': typeof ApiNovelsRouteWithChildren
   '/api/upload': typeof ApiUploadRoute
-  '/novel/$id': typeof NovelIdRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chapters/$id': typeof ApiChaptersIdRoute
   '/api/novels/$id': typeof ApiNovelsIdRouteWithChildren
+  '/novel/$id': typeof NovelIdIndexRoute
   '/api/novels/$id/resplit': typeof ApiNovelsIdResplitRoute
   '/novel/$id/chapter/$chapterId': typeof NovelIdChapterChapterIdRoute
 }
@@ -101,10 +101,10 @@ export interface FileRoutesById {
   '/api/chapters': typeof ApiChaptersRouteWithChildren
   '/api/novels': typeof ApiNovelsRouteWithChildren
   '/api/upload': typeof ApiUploadRoute
-  '/novel/$id': typeof NovelIdRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/chapters/$id': typeof ApiChaptersIdRoute
   '/api/novels/$id': typeof ApiNovelsIdRouteWithChildren
+  '/novel/$id/': typeof NovelIdIndexRoute
   '/api/novels/$id/resplit': typeof ApiNovelsIdResplitRoute
   '/novel/$id/chapter/$chapterId': typeof NovelIdChapterChapterIdRoute
 }
@@ -115,10 +115,10 @@ export interface FileRouteTypes {
     | '/api/chapters'
     | '/api/novels'
     | '/api/upload'
-    | '/novel/$id'
     | '/api/auth/$'
     | '/api/chapters/$id'
     | '/api/novels/$id'
+    | '/novel/$id/'
     | '/api/novels/$id/resplit'
     | '/novel/$id/chapter/$chapterId'
   fileRoutesByTo: FileRoutesByTo
@@ -127,10 +127,10 @@ export interface FileRouteTypes {
     | '/api/chapters'
     | '/api/novels'
     | '/api/upload'
-    | '/novel/$id'
     | '/api/auth/$'
     | '/api/chapters/$id'
     | '/api/novels/$id'
+    | '/novel/$id'
     | '/api/novels/$id/resplit'
     | '/novel/$id/chapter/$chapterId'
   id:
@@ -139,10 +139,10 @@ export interface FileRouteTypes {
     | '/api/chapters'
     | '/api/novels'
     | '/api/upload'
-    | '/novel/$id'
     | '/api/auth/$'
     | '/api/chapters/$id'
     | '/api/novels/$id'
+    | '/novel/$id/'
     | '/api/novels/$id/resplit'
     | '/novel/$id/chapter/$chapterId'
   fileRoutesById: FileRoutesById
@@ -152,8 +152,9 @@ export interface RootRouteChildren {
   ApiChaptersRoute: typeof ApiChaptersRouteWithChildren
   ApiNovelsRoute: typeof ApiNovelsRouteWithChildren
   ApiUploadRoute: typeof ApiUploadRoute
-  NovelIdRoute: typeof NovelIdRouteWithChildren
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  NovelIdIndexRoute: typeof NovelIdIndexRoute
+  NovelIdChapterChapterIdRoute: typeof NovelIdChapterChapterIdRoute
 }
 
 declare module '@tanstack/solid-router' {
@@ -186,13 +187,6 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof ApiUploadRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/novel/$id': {
-      id: '/novel/$id'
-      path: '/novel/$id'
-      fullPath: '/novel/$id'
-      preLoaderRoute: typeof NovelIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -214,6 +208,13 @@ declare module '@tanstack/solid-router' {
       preLoaderRoute: typeof ApiNovelsIdRouteImport
       parentRoute: typeof ApiNovelsRoute
     }
+    '/novel/$id/': {
+      id: '/novel/$id/'
+      path: '/novel/$id'
+      fullPath: '/novel/$id/'
+      preLoaderRoute: typeof NovelIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/novels/$id/resplit': {
       id: '/api/novels/$id/resplit'
       path: '/resplit'
@@ -223,10 +224,10 @@ declare module '@tanstack/solid-router' {
     }
     '/novel/$id/chapter/$chapterId': {
       id: '/novel/$id/chapter/$chapterId'
-      path: '/chapter/$chapterId'
+      path: '/novel/$id/chapter/$chapterId'
       fullPath: '/novel/$id/chapter/$chapterId'
       preLoaderRoute: typeof NovelIdChapterChapterIdRouteImport
-      parentRoute: typeof NovelIdRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -267,24 +268,14 @@ const ApiNovelsRouteWithChildren = ApiNovelsRoute._addFileChildren(
   ApiNovelsRouteChildren,
 )
 
-interface NovelIdRouteChildren {
-  NovelIdChapterChapterIdRoute: typeof NovelIdChapterChapterIdRoute
-}
-
-const NovelIdRouteChildren: NovelIdRouteChildren = {
-  NovelIdChapterChapterIdRoute: NovelIdChapterChapterIdRoute,
-}
-
-const NovelIdRouteWithChildren =
-  NovelIdRoute._addFileChildren(NovelIdRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiChaptersRoute: ApiChaptersRouteWithChildren,
   ApiNovelsRoute: ApiNovelsRouteWithChildren,
   ApiUploadRoute: ApiUploadRoute,
-  NovelIdRoute: NovelIdRouteWithChildren,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  NovelIdIndexRoute: NovelIdIndexRoute,
+  NovelIdChapterChapterIdRoute: NovelIdChapterChapterIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

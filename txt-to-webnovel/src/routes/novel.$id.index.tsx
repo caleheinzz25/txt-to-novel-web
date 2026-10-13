@@ -16,7 +16,7 @@ import {
 } from 'lucide-solid'
 import ThemeSelector from '../components/ThemeSelector'
 
-export const Route = createFileRoute('/novel/$id')({
+export const Route = createFileRoute('/novel/$id/')({
   component: NovelDetailPage,
 })
 
@@ -228,22 +228,24 @@ function NovelDetailPage() {
               {/* Tombol Aksi Mulai Baca */}
               {novel()!.chapters.length > 0 && (
                 <div style={{ display: "flex", gap: "0.75rem", "flex-wrap": "wrap", "margin-bottom": "1.5rem" }}>
-                  <a
-                    href={`/novel/${novel()!._id}/chapter/${novel()!.chapters[0]._id}`}
+                  <Link
+                    to="/novel/$id/chapter/$chapterId"
+                    params={{ id: novel()!._id, chapterId: novel()!.chapters[0]._id }}
                     class="upload-btn"
                     style={{ display: "inline-flex", gap: "0.5rem" }}
                   >
                     <Play size={18} fill="currentColor" />
                     <span>Mulai Baca (Bab 1)</span>
-                  </a>
+                  </Link>
                   {novel()!.chapters.length > 1 && (
-                    <a
-                      href={`/novel/${novel()!._id}/chapter/${novel()!.chapters[novel()!.chapters.length - 1]._id}`}
+                    <Link
+                      to="/novel/$id/chapter/$chapterId"
+                      params={{ id: novel()!._id, chapterId: novel()!.chapters[novel()!.chapters.length - 1]._id }}
                       class="chapter-sort-btn"
                       style={{ padding: "0.75rem 1.25rem", "border-radius": "12px" }}
                     >
                       <span>Bab Terakhir (#{novel()!.chapters[novel()!.chapters.length - 1].chap})</span>
-                    </a>
+                    </Link>
                   )}
                 </div>
               )}
@@ -465,8 +467,9 @@ function NovelDetailPage() {
             ) : (
               <div class="chapters-list">
                 {filteredChapters().map((chapter) => (
-                  <a
-                    href={`/novel/${novel()!._id}/chapter/${chapter._id}`}
+                  <Link
+                    to="/novel/$id/chapter/$chapterId"
+                    params={{ id: novel()!._id, chapterId: chapter._id }}
                     class="chapter-item"
                   >
                     <span class="chapter-num">{chapter.chap}</span>
@@ -474,7 +477,7 @@ function NovelDetailPage() {
                     <span class="chapter-words">
                       {formatWordCount(chapter.wordCount)} kata
                     </span>
-                  </a>
+                  </Link>
                 ))}
               </div>
             )}
