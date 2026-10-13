@@ -4,6 +4,24 @@ import { getNovelById } from "@/lib/models/novels";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
+// In-memory cache for novel metadata to avoid repeated DB hits on every chapter read
+const novelCache = new Map<string, { name: string; totalChapters: number }>();
+
+async function getCachedNovel(novelId: string) {
+  if (novelCache.has(novelId)) {
+    return novelCache.get(novelId)!;
+  }
+  const novel = await getNovelById(novelId);
+  const data = {
+    name: novel?.name || "Unknown Novel",
+    totalChapters: novel?.totalChapters || 0,
+  };
+  if (novel) {
+    novelCache.set(novelId, data);
+  }
+  return data;
+}
+
 export async function GET(request: NextRequest, context: RouteParams) {
   try {
     const { id } = await context.params;
@@ -16,14 +34,13 @@ export async function GET(request: NextRequest, context: RouteParams) {
       );
     }
 
-    // Get novel info
-    const novel = await getNovelById(chapter.novelId.toString());
+    const novelIdStr = chapter.novelId.toString();
 
-    // Get adjacent chapters for navigation
-    const { prev, next } = await getAdjacentChapters(
-      chapter.novelId.toString(),
-      chapter.chap
-    );
+    // Fetch novel info (from cache) and adjacent chapters in parallel
+    const [novel, { prev, next }] = await Promise.all([
+      getCachedNovel(novelIdStr),
+      getAdjacentChapters(novelIdStr, chapter.chap),
+    ]);
 
     return NextResponse.json({
       success: true,

@@ -16,6 +16,7 @@ interface ChapterListProps {
   chapters: Chapter[];
   currentChapterId: string;
   onClose: () => void;
+  onSelectChapter?: (chapterId: string) => void;
 }
 
 export default function ChapterList({
@@ -23,6 +24,7 @@ export default function ChapterList({
   chapters,
   currentChapterId,
   onClose,
+  onSelectChapter,
 }: ChapterListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [ascending, setAscending] = useState(true);
@@ -139,7 +141,13 @@ export default function ChapterList({
                   ref={isActive ? activeItemRef : null}
                   href={`/novel/${novelId}/chapter/${chapter._id}`}
                   className={`chapter-list-item ${isActive ? "active" : ""}`}
-                  onClick={onClose}
+                  onClick={(e) => {
+                    onClose();
+                    if (onSelectChapter && !isActive) {
+                      e.preventDefault();
+                      onSelectChapter(chapter._id);
+                    }
+                  }}
                 >
                   <span className="chapter-number">{chapter.chap}</span>
                   <span className="chapter-name">{chapter.name}</span>

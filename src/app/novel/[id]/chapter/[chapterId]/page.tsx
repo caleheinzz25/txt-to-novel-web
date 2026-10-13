@@ -36,17 +36,53 @@ interface ChapterListItem {
 
 // Client-side cache to make chapter navigation instant
 const chapterCache = new Map<string, Chapter>();
+const pendingFetches = new Map<string, Promise<Chapter | null>>();
 
-async function prefetchChapter(id: string) {
-  if (!id || chapterCache.has(id)) return;
-  try {
-    const res = await fetch(`/api/chapters/${id}`);
-    const data = await res.json();
-    if (data.success) {
-      chapterCache.set(id, data.data);
+async function fetchChapterData(id: string): Promise<Chapter | null> {
+  if (!id) return null;
+  if (chapterCache.has(id)) return chapterCache.get(id)!;
+  if (pendingFetches.has(id)) return pendingFetches.get(id)!;
+
+  const promise = (async () => {
+    try {
+      const res = await fetch(`/api/chapters/${id}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        chapterCache.set(id, data.data);
+        return data.data as Chapter;
+      }
+      return null;
+    } catch {
+      return null;
+    } finally {
+      pendingFetches.delete(id);
     }
-  } catch {
-    // Ignore prefetch failures silently
+  })();
+
+  pendingFetches.set(id, promise);
+  return promise;
+}
+
+// Prefetch multiple chapters ahead so rapid clicking is completely buffered
+async function prefetchChaptersAhead(startChapter: Chapter) {
+  // 1. Fetch immediate next and previous
+  const next1Promise = startChapter.navigation.nextId
+    ? fetchChapterData(startChapter.navigation.nextId)
+    : Promise.resolve(null);
+
+  if (startChapter.navigation.prevId) {
+    fetchChapterData(startChapter.navigation.prevId);
+  }
+
+  // 2. Once next1 arrives, immediately prefetch next2 (+2 chapters ahead)
+  const next1 = await next1Promise;
+  if (next1 && next1.navigation.nextId) {
+    const next2Promise = fetchChapterData(next1.navigation.nextId);
+    const next2 = await next2Promise;
+    if (next2 && next2.navigation.nextId) {
+      // Buffer +3 chapters ahead
+      fetchChapterData(next2.navigation.nextId);
+    }
   }
 }
 
@@ -55,14 +91,20 @@ export default function ChapterReaderPage({
 }: {
   params: Promise<{ id: string; chapterId: string }>;
 }) {
-  const { id: novelId, chapterId } = use(params);
-  const [chapter, setChapter] = useState<Chapter | null>(() => chapterCache.get(chapterId) || null);
+  const { id: novelId, chapterId: initialChapterId } = use(params);
+  const [currentChapterId, setCurrentChapterId] = useState(initialChapterId);
+  const [chapter, setChapter] = useState<Chapter | null>(() => chapterCache.get(initialChapterId) || null);
   const [chapters, setChapters] = useState<ChapterListItem[]>([]);
-  const [loading, setLoading] = useState(!chapterCache.has(chapterId));
+  const [loading, setLoading] = useState(!chapterCache.has(initialChapterId));
   const [error, setError] = useState<string | null>(null);
   const [fontSize, setFontSize] = useState(18);
   const [showChapterList, setShowChapterList] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+
+  // Sync state if user navigates with browser back/forward buttons
+  useEffect(() => {
+    setCurrentChapterId(initialChapterId);
+  }, [initialChapterId]);
 
   useEffect(() => {
     // Load saved font size
@@ -90,26 +132,39 @@ export default function ChapterReaderPage({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Scroll to top when chapterId changes
-  useEffect(() => {
+  // Navigate to a new chapter instantly in-memory without waiting for Next.js router
+  const navigateToChapter = (targetId: string) => {
+    if (!targetId || targetId === currentChapterId) return;
+
+    // Instantly update browser URL and scroll to top
+    window.history.pushState(null, "", `/novel/${novelId}/chapter/${targetId}`);
+    setCurrentChapterId(targetId);
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
     setScrollProgress(0);
-  }, [chapterId]);
+
+    // If target chapter is already cached, switch view immediately
+    if (chapterCache.has(targetId)) {
+      const cached = chapterCache.get(targetId)!;
+      setChapter(cached);
+      setLoading(false);
+      setError(null);
+      prefetchChaptersAhead(cached);
+    } else {
+      setLoading(true);
+    }
+  };
 
   useEffect(() => {
     let isCancelled = false;
 
     async function loadChapter() {
-      // If already in cache, set immediately without spinner
-      if (chapterCache.has(chapterId)) {
-        const cached = chapterCache.get(chapterId)!;
+      // 1. Instant cache hit
+      if (chapterCache.has(currentChapterId)) {
+        const cached = chapterCache.get(currentChapterId)!;
         setChapter(cached);
         setLoading(false);
         setError(null);
-
-        // Preload adjacent chapters in background
-        if (cached.navigation.nextId) prefetchChapter(cached.navigation.nextId);
-        if (cached.navigation.prevId) prefetchChapter(cached.navigation.prevId);
+        prefetchChaptersAhead(cached);
         return;
       }
 
@@ -117,20 +172,15 @@ export default function ChapterReaderPage({
       setError(null);
 
       try {
-        const response = await fetch(`/api/chapters/${chapterId}`);
-        const data = await response.json();
+        const data = await fetchChapterData(currentChapterId);
 
         if (isCancelled) return;
 
-        if (data.success) {
-          chapterCache.set(chapterId, data.data);
-          setChapter(data.data);
-
-          // Preload adjacent chapters in background
-          if (data.data.navigation.nextId) prefetchChapter(data.data.navigation.nextId);
-          if (data.data.navigation.prevId) prefetchChapter(data.data.navigation.prevId);
+        if (data) {
+          setChapter(data);
+          prefetchChaptersAhead(data);
         } else {
-          setError(data.message || "Chapter not found");
+          setError("Chapter not found");
         }
       } catch {
         if (!isCancelled) {
@@ -148,7 +198,7 @@ export default function ChapterReaderPage({
     return () => {
       isCancelled = true;
     };
-  }, [chapterId]);
+  }, [currentChapterId]);
 
   useEffect(() => {
     async function fetchChapters() {
@@ -237,6 +287,7 @@ export default function ChapterReaderPage({
         onFontSizeChange={handleFontSizeChange}
         fontSize={fontSize}
         onShowChapterList={() => setShowChapterList(true)}
+        onNavigateChapter={navigateToChapter}
       />
 
       <article
@@ -294,6 +345,10 @@ export default function ChapterReaderPage({
             <Link
               href={`/novel/${novelId}/chapter/${chapter.navigation.prevId}`}
               className="bottom-nav-btn"
+              onClick={(e) => {
+                e.preventDefault();
+                navigateToChapter(chapter.navigation.prevId!);
+              }}
             >
               <ChevronLeft size={20} />
               <span>Sebelumnya</span>
@@ -324,6 +379,10 @@ export default function ChapterReaderPage({
             <Link
               href={`/novel/${novelId}/chapter/${chapter.navigation.nextId}`}
               className="bottom-nav-btn primary"
+              onClick={(e) => {
+                e.preventDefault();
+                navigateToChapter(chapter.navigation.nextId!);
+              }}
             >
               <span>Selanjutnya</span>
               <ChevronRight size={20} />
@@ -354,8 +413,9 @@ export default function ChapterReaderPage({
         <ChapterList
           novelId={novelId}
           chapters={chapters}
-          currentChapterId={chapterId}
+          currentChapterId={currentChapterId}
           onClose={() => setShowChapterList(false)}
+          onSelectChapter={navigateToChapter}
         />
       )}
     </div>

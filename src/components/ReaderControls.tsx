@@ -25,6 +25,7 @@ interface ReaderControlsProps {
   onFontSizeChange: (size: number) => void;
   fontSize: number;
   onShowChapterList: () => void;
+  onNavigateChapter?: (chapterId: string) => void;
 }
 
 export default function ReaderControls({
@@ -37,6 +38,7 @@ export default function ReaderControls({
   onFontSizeChange,
   fontSize,
   onShowChapterList,
+  onNavigateChapter,
 }: ReaderControlsProps) {
   const { theme, cycleTheme, setTheme } = useTheme();
   const [showSettings, setShowSettings] = useState(false);
@@ -197,6 +199,12 @@ export default function ReaderControls({
             href={`/novel/${novelId}/chapter/${prevChapterId}`}
             className="nav-btn prev"
             aria-label="Bab Sebelumnya"
+            onClick={(e) => {
+              if (onNavigateChapter) {
+                e.preventDefault();
+                onNavigateChapter(prevChapterId);
+              }
+            }}
           >
             <ChevronLeft size={18} />
             <span>Sebelumnya</span>
@@ -223,6 +231,12 @@ export default function ReaderControls({
             href={`/novel/${novelId}/chapter/${nextChapterId}`}
             className="nav-btn next"
             aria-label="Bab Selanjutnya"
+            onClick={(e) => {
+              if (onNavigateChapter) {
+                e.preventDefault();
+                onNavigateChapter(nextChapterId);
+              }
+            }}
           >
             <span>Selanjutnya</span>
             <ChevronRight size={18} />
