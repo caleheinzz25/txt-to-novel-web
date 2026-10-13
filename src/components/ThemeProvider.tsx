@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from "react";
 
-export type Theme = "light" | "dark" | "sepia";
+export type Theme = "oled" | "dark" | "sepia" | "light";
 
 interface ThemeContextType {
   theme: Theme;
@@ -19,7 +19,7 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: "dark",
+  theme: "oled",
   toggleTheme: () => {},
   setTheme: () => {},
   cycleTheme: () => {},
@@ -35,16 +35,23 @@ interface ThemeProviderProps {
 }
 
 export default function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<Theme>("dark");
+  const [theme, setThemeState] = useState<Theme>("oled");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     const savedTheme = localStorage.getItem("theme") as Theme | null;
-    if (savedTheme && (savedTheme === "light" || savedTheme === "dark" || savedTheme === "sepia")) {
+    if (
+      savedTheme &&
+      (savedTheme === "oled" ||
+        savedTheme === "dark" ||
+        savedTheme === "sepia" ||
+        savedTheme === "light")
+    ) {
       setThemeState(savedTheme);
-    } else if (window.matchMedia("(prefers-color-scheme: light)").matches) {
-      setThemeState("light");
+    } else {
+      // Default to oled for perfect deep blacks and eye comfort
+      setThemeState("oled");
     }
   }, []);
 
@@ -57,9 +64,10 @@ export default function ThemeProvider({ children }: ThemeProviderProps) {
 
   const cycleTheme = () => {
     setThemeState((prev) => {
-      if (prev === "dark") return "light";
-      if (prev === "light") return "sepia";
-      return "dark";
+      if (prev === "oled") return "dark";
+      if (prev === "dark") return "sepia";
+      if (prev === "sepia") return "light";
+      return "oled";
     });
   };
 

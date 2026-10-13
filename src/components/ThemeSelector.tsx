@@ -11,9 +11,10 @@ export default function ThemeSelector() {
   }
 
   const themes: { id: Theme; label: string; icon: typeof Sun }[] = [
-    { id: "light", label: "Light", icon: Sun },
-    { id: "sepia", label: "Sepia", icon: Coffee },
+    { id: "oled", label: "OLED", icon: Moon },
     { id: "dark", label: "Dark", icon: Moon },
+    { id: "sepia", label: "Sepia", icon: Coffee },
+    { id: "light", label: "Light", icon: Sun },
   ];
 
   return (

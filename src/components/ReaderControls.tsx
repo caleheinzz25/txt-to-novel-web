@@ -56,6 +56,7 @@ export default function ReaderControls({
   const [titleExpanded, setTitleExpanded] = useState(false);
 
   const getThemeIcon = () => {
+    if (theme === "oled") return <Moon size={20} style={{ fill: "currentColor" }} />;
     if (theme === "dark") return <Moon size={20} />;
     if (theme === "sepia") return <Coffee size={20} />;
     return <Sun size={20} />;
@@ -164,7 +165,7 @@ export default function ReaderControls({
               Tema:
             </span>
             <div style={{ display: "flex", gap: "0.25rem" }}>
-              {(["light", "sepia", "dark"] as const).map((t) => (
+              {(["oled", "dark", "sepia", "light"] as const).map((t) => (
                 <button
                   key={t}
                   type="button"
@@ -181,7 +182,7 @@ export default function ReaderControls({
                     cursor: "pointer",
                   }}
                 >
-                  {t}
+                  {t === "oled" ? "OLED" : t}
                 </button>
               ))}
             </div>
